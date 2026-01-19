@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recepción de Equipos</title>
+  <style>
+        .inv-item{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:12px;
+      margin-top:10px;
+      background:var(--bg);
+    }
+    .inv-item b{color:var(--text)}
+    .inv-muted{color:var(--text-muted); font-size:12px; margin-top:6px}
+
+    :root{
+      --bg:#f8f9fa; --card-bg:#fff; --accent:#ff4800; --accent-light:#e3f2fd;
+      --success:#28a745; --error:#dc3545; --text:#212529; --text-muted:#6c757d;
+      --border:#dee2e6; --shadow:0 2px 8px rgba(0,0,0,.1); --radius:12px; --transition:all .3s ease;
+    }
+    body{
+      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+      padding:16px; max-width:720px; margin:0 auto;
+      background:linear-gradient(135deg,var(--bg) 0%,#e9ecef 100%);
+      color:var(--text); line-height:1.5;
+    }
+    .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+    .pill{font-size:12px;border:1px solid var(--border);padding:6px 12px;border-radius:20px;color:var(--text-muted);background:var(--card-bg);box-shadow:var(--shadow)}
+    .card{border:none;border-radius:var(--radius);padding:20px;margin-top:12px;background:var(--card-bg);box-shadow:var(--shadow)}
+    h1{font-size:24px;margin:0;color:var(--accent);font-weight:600}
+    h2{font-size:18px;margin:0 0 12px 0;color:var(--text);font-weight:500}
+    label{display:block;margin-top:16px;font-weight:600;color:var(--text)}
+    input,select,textarea,button{
+      width:100%;padding:14px;font-size:16px;margin-top:8px;border:1px solid var(--border);
+      border-radius:var(--radius);box-sizing:border-box;background:var(--card-bg);transition:var(--transition);
+      min-height:48px
+    }
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+    textarea{min-height:100px;resize:vertical}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>div{flex:1;min-width:200px}
+    .nav{display:flex;gap:12px;margin-top:20px;justify-content:space-between}
+    .nav button{cursor:pointer;font-weight:600;border:none;border-radius:var(--radius);padding:14px 20px;transition:var(--transition);min-height:48px}
+    .nav button:not(.secondary){background:linear-gradient(135deg,var(--accent) 0%,#ff8800 100%);color:#fff}
+    .nav button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+    .nav button:disabled{opacity:.5;cursor:not-allowed}
+    .hidden{display:none}
+    #video{width:100%;max-height:280px;border-radius:var(--radius);background:#000;display:none;margin-top:12px;box-shadow:var(--shadow)}
+    .msg{margin-top:12px;font-size:14px;padding:10px;border-radius:var(--radius);text-align:center}
+    .ok{color:var(--success);background:#d4edda;border:1px solid #c3e6cb}
+    .err{color:var(--error);background:#f8d7da;border:1px solid #f5c6cb}
+    .req::after{content:" *";color:var(--error);font-weight:700}
+    .small{font-size:12px;color:var(--text-muted);margin-top:8px}
+    .divider{height:1px;background:var(--border);margin:20px 0}
+    .progress{display:flex;justify-content:space-between;margin-bottom:20px}
+    .step{flex:1;height:4px;background:var(--border);border-radius:2px;margin:0 2px;transition:var(--transition)}
+    .step.active{background:var(--accent)}
+    .card>div{animation:fadeIn .5s ease-in-out}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* (este selector ya no se usa porque no hay #cables, pero lo dejo para no tocar más) */
+    #cables[multiple]{ min-height:120px; }
+
+    .cables-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .cable-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--card-bg);
+    }
+
+    .cable-item input {
+      width: auto;
+      min-height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1>
+      📦 Recepción de Equipos</h1>
+    <span class="pill" id="statusPill">Cargando opciones…</span>
+  </div>
+
+  <div class="progress">
+    <div class="step active" id="progress1"></div>
+    <div class="step" id="progress2"></div>
+    <div class="step" id="progress3"></div>
+  </div>
+
+  <div class="card">
+    <!-- STEP 1 -->
+    <div id="step1">
+      <h2>🔍 Paso 1: Identificación</h2>
+
+      <!-- CAMBIO: ahora es input con datalist (no select) -->
+      <label class="req" for="tecnicoInput">Técnico</label>
+      <input id="tecnicoInput" list="tecnicosList" placeholder="Escribe tu nombre" autocomplete="off" />
+      <datalist id="tecnicosList"></datalist>
+
+      <div id="rutWrap" class="hidden">
+        <label class="req" for="rutInput">RUT (para confirmar)</label>
+        <input id="rutInput" placeholder="Ej: 12345678-9" autocomplete="off" />
+        <button id="verifyTechBtn" type="button">✅ Confirmar técnico</button>
+        <div class="small">Se validara con tus credenciales entregadas</div>
+      </div>
+
+      <div id="invWrap" class="hidden">
+        <div class="divider"></div>
+        <h2 style="margin:0 0 8px 0;">📦 Inventario del técnico</h2>
+        <div class="pill" id="invPill">Cargando…</div>
+
+        <div class="divider"></div>
+        <div id="invList"></div>
+      </div>
+
+      <label class="req" for="productos">Producto</label>
+      <select id="productos"></select>
+
+      <label class="req" for="serialNumber">Serial Number (S/N)</label>
+      <input id="serialNumber" placeholder="Escribe o escanea el S/N" autocomplete="off" />
+
+      <button id="scanBtn" type="button">📷 Escanear S/N</button>
+      <video id="video" playsinline></video>
+      <div class="small">💡 Tip: Mejor luz = mejor lectura (Code128/Code39/QR).</div>
+
+      <label for="usuario">Usuario</label>
+      <input id="usuario" placeholder="Nombre usuario / contacto" autocomplete="off" />
+
+      <label for="fechaRecibido">Fecha Recibido</label>
+      <input id="fechaRecibido" type="datetime-local" />
+
+      <div class="nav">
+        <button class="secondary" type="button" disabled>← Atrás</button>
+        <button type="button" onclick="goStep(2)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2" class="hidden">
+      <h2>⚙️ Paso 2: Accesorios y specs</h2>
+
+      <div class="row">
+        <div>
+          <label>Cables</label>
+          <div id="cablesWrap"></div>
+        </div>
+
+        <div>
+          <label for="cargador">Cargador</label>
+          <select id="cargador"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="marca">Marca</label>
+          <select id="marca"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="ram">Ram</label>
+          <select id="ram"></select>
+        </div>
+        <div>
+          <label for="procesador">Procesador</label>
+          <select id="procesador"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="generacion">Generación</label>
+          <select id="generacion"></select>
+        </div>
+        <div>
+          <label for="subCategoria">Sub categoría</label>
+          <select id="subCategoria"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="watts">Watts</label>
+          <select id="watts"></select>
+        </div>
+        <div>
+          <label for="wattsCargador">Watts Cargador</label>
+          <select id="wattsCargador"></select>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="secondary" type="button" onclick="goStep(1)">← Atrás</button>
+        <button type="button" onclick="goStep(3)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="hidden">
+      <h2>🔧 Paso 3: Falla y diagnóstico</h2>
+
+      <label for="falla">Falla</label>
+      <select id="falla"></select>
+
+      <label for="diagnostico">Diagnóstico</label>
+      <select id="diagnostico"></select>
+
+      <div class="divider"></div>
+
+      <label for="detalleFalla">Detalle Falla (texto)</label>
+      <textarea id="detalleFalla" placeholder="Detalle adicional de la falla..."></textarea>
+
+      <label for="detalleDiagnostico">Detalle Diagnóstico (texto)</label>
+      <textarea id="detalleDiagnostico" placeholder="Detalle adicional del diagnóstico..."></textarea>
+
+      <div class="nav">
+        <button class="secondary" type="button" onclick="goStep(2)">← Atrás</button>
+        <button id="saveBtn" type="button" onclick="save()">✅ Guardar</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    /************ CONFIG ************/
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFtAK7pp8k4amh6bQL9V0NR1wmDnhPVRkJFITQKwfaFSDRVRt5dvo7H_nzzlUj9nOg/exec".trim();
+
+    /************ UI ************/
+    const cablesWrap = document.getElementById("cablesWrap");
+    const tecnicoInput = document.getElementById("tecnicoInput");
+    const tecnicosList = document.getElementById("tecnicosList");
+
+    const rutWrap = document.getElementById("rutWrap");
+    const rutInput = document.getElementById("rutInput");
+    const verifyTechBtn = document.getElementById("verifyTechBtn");
+
+    const invWrap = document.getElementById("invWrap");
+    const invPill = document.getElementById("invPill");
+    const invList = document.getElementById("invList");
+
+    let techSession = { verified: false, tecnico: "" };
+
+    const statusPill = document.getElementById("statusPill");
+    const msgEl = document.getElementById("msg");
+
+    function setPill(text, kind="") {
+      statusPill.textContent = text;
+      statusPill.style.borderColor = kind === "err" ? "#b00020" : "#dee2e6";
+      statusPill.style.color = kind === "err" ? "#b00020" : "#6c757d";
+    }
+    function setMsg(text, kind="") {
+      msgEl.textContent = text;
+      msgEl.className = "msg " + (kind === "ok" ? "ok" : kind === "err" ? "err" : "");
+    }
+
+    window.goStep = (n) => {
+      ["step1","step2","step3"].forEach(id => document.getElementById(id).classList.add("hidden"));
+      document.getElementById("step"+n).classList.remove("hidden");
+      setMsg("");
+
+      if (n !== 1) stopScan();
+
+      ["progress1","progress2","progress3"].forEach((id, i) => {
+        document.getElementById(id).classList.toggle("active", i < n);
+      });
+    };
+
+    (function setNow(){
+      const el = document.getElementById("fechaRecibido");
+      const d = new Date();
+      const pad = (x) => String(x).padStart(2, "0");
+      el.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    })();
+
+    const mapSelects = [
+      { id: "productos",     key: "Productos" },
+      { id: "cables",        key: "Cables" },
+      { id: "cargador",      key: "Cargador" },
+      { id: "falla",         key: "Falla" },
+      { id: "diagnostico",   key: "Diagnostico" },
+      { id: "ram",           key: "Ram" },
+      { id: "procesador",    key: "Procesador" },
+      { id: "generacion",    key: "Generacion" },
+      { id: "subCategoria",  key: "Sub categoria" },
+      { id: "watts",         key: "Watts" },
+      { id: "wattsCargador", key: "WattsCargador" },
+      { id: "marca",         key: "Marca" }
+    ];
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    /* ✅ ARREGLADO: fillSelect real (NO contiene renderCablesCheckboxes) */
+    function fillSelect(el, arr) {
+      const show = (arr || [])
+        .filter(v => v !== null && v !== undefined)
+        .map(v => String(v).trim())
+        .filter(Boolean);
+
+      el.innerHTML =
+        `<option value="">Selecciona…</option>` +
+        show.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    }
+
+    /* ✅ ARREGLADO: renderCablesCheckboxes ahora está definido en el scope correcto */
+    function renderCablesCheckboxes(arr) {
+      const list = (arr || []).map(v => String(v).trim()).filter(Boolean);
+      cablesWrap.innerHTML = "";
+
+      if (!list.length) {
+        cablesWrap.innerHTML = `<div class="small">No hay cables disponibles.</div>`;
+        return;
+      }
+
+      const box = document.createElement("div");
+      box.className = "cables-box";
+
+      list.forEach(v => {
+        const label = document.createElement("label");
+        label.className = "cable-item";
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = v;
+
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(v));
+        box.appendChild(label);
+      });
+
+      cablesWrap.appendChild(box);
+    }
+
+    function fillDatalist(listEl, arr) {
+      const show = (arr || []).filter(v => v !== null && v !== undefined).map(v => String(v).trim()).filter(Boolean);
+      listEl.innerHTML = show.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
+    }
+
+    async function loadOptions() {
+      setPill("Cargando opciones…");
+      const res = await fetch(SCRIPT_URL, { method: "GET", cache: "no-store" });
+      const text = await res.text();
+
+      let data;
+      try { data = JSON.parse(text); }
+      catch {
+        console.error("Respuesta no JSON:", text);
+        throw new Error("doGet no devolvió JSON.");
+      }
+
+      for (const m of mapSelects) {
+        if (m.id === "cables") {
+          renderCablesCheckboxes(data[m.key] || []);
+          continue;
+        }
+        const el = document.getElementById(m.id);
+        if (!el) continue;
+        fillSelect(el, data[m.key] || []);
+      }
+
+      fillDatalist(tecnicosList, data["Tecnicos"] || []);
+      setPill("Opciones listas ✅");
+    }
+
+    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm";
+
+    const codeReader = new BrowserMultiFormatReader();
+    const videoEl = document.getElementById("video");
+    const scanBtn = document.getElementById("scanBtn");
+    const serialInput = document.getElementById("serialNumber");
+    let scanning = false;
+
+    async function startScan() {
+      scanning = true;
+      videoEl.style.display = "block";
+      scanBtn.textContent = "⛔ Detener escaneo";
+
+      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+      const backCam = devices.find(d => /back|rear|environment/i.test(d.label))?.deviceId;
+
+      await codeReader.decodeFromVideoDevice(backCam || undefined, videoEl, (result) => {
+        if (result?.getText()) {
+          serialInput.value = result.getText();
+          stopScan();
+        }
+      });
+    }
+
+    function stopScan() {
+      if (!scanning) return;
+      scanning = false;
+      try { codeReader.reset(); } catch {}
+      videoEl.style.display = "none";
+      scanBtn.textContent = "📷 Escanear S/N";
+    }
+
+    scanBtn.addEventListener("click", async () => {
+      if (scanning) return stopScan();
+      try { await startScan(); }
+      catch (e) {
+        console.error(e);
+        stopScan();
+        alert("No se pudo abrir la cámara. Usa HTTPS y da permisos.");
+      }
+    });
+
+    function getFechaISO() {
+      const v = document.getElementById("fechaRecibido").value;
+      if (!v) return new Date().toISOString();
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+
+    window.save = async () => {
+      setMsg("");
+
+      if (!techSession.verified) {
+        setMsg("Debes confirmar tu técnico con RUT antes de guardar.", "err");
+        goStep(1);
+        return;
+      }
+
+      const producto = document.getElementById("productos").value;
+      if (!producto) { setMsg("Completa Producto antes de guardar.", "err"); goStep(1); return; }
+      if (!serialInput.value.trim()) { setMsg("Completa o escanea el Serial Number (S/N).", "err"); goStep(1); return; }
+
+      const payload = {
+        "Tecnico": techSession.tecnico,
+
+        "Producto": producto,
+        "Serial Number": serialInput.value.trim(),
+        "Usuario": document.getElementById("usuario").value.trim(),
+        "Fecha Recibido": getFechaISO(),
+
+        "Marca": document.getElementById("marca").value,
+        "Cargador": document.getElementById("cargador").value,
+
+        /* ✅ ARREGLADO: ahora lee checkboxes dentro de cablesWrap */
+        "Cables": Array.from(
+          cablesWrap.querySelectorAll('input[type="checkbox"]:checked')
+        ).map(cb => cb.value).join(", "),
+
+        "Falla": document.getElementById("falla").value,
+        "Diagnostico": document.getElementById("diagnostico").value,
+
+        "Ram": document.getElementById("ram").value,
+        "Procesador": document.getElementById("procesador").value,
+        "Generacion": document.getElementById("generacion").value,
+        "Sub categoria": document.getElementById("subCategoria").value,
+
+        "Watts": document.getElementById("watts").value,
+        "WattsCargador": document.getElementById("wattsCargador").value,
+
+        "Detalle Falla": document.getElementById("detalleFalla").value.trim(),
+        "Detalle Diagnostico": document.getElementById("detalleDiagnostico").value.trim()
+      };
+
+      try {
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Guardando…";
+
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        let out;
+        try { out = JSON.parse(text); }
+        catch {
+          console.error("Respuesta no JSON:", text);
+          throw new Error("doPost no devolvió JSON.");
+        }
+
+        if (out.ok) {
+          setMsg("✅ Guardado. Puedes ingresar otro equipo.", "ok");
+        } else {
+          setMsg("❌ Error al guardar: " + (out.error || "desconocido"), "err");
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = "✅ Guardar";
+      } catch (e) {
+        console.error(e);
+        setMsg("❌ No se pudo guardar. Revisa consola (F12).", "err");
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.disabled = false;
+        saveBtn.textContent = "✅ Guardar";
+      }
+    };
+
+    try {
+      await loadOptions();
+    } catch (e) {
+      console.error(e);
+      setPill("Error cargando opciones", "err");
+      alert("No cargó opciones. Abre consola (F12) y revisa el error.");
+    }
+
+    function cleanRut(rut) {
+      const r = String(rut || "")
+        .toUpperCase()
+        .replaceAll(".", "")
+        .replaceAll(" ", "")
+        .trim();
+
+      if (!/^\d{7,8}-[\dK]$/.test(r)) return "";
+      return r;
+    }
+
+    function renderInventory(payload) {
+      const count = payload?.count ?? 0;
+      invPill.textContent = `Inventario total: ${count}`;
+
+      const items = payload?.items || [];
+      if (!items.length) {
+        invList.innerHTML = `<div class="inv-item"><b>Sin equipos asignados</b><div class="inv-muted">No hay registros para este técnico.</div></div>`;
+        return;
+      }
+
+      invList.innerHTML = items.map(it => `
+        <div class="inv-item">
+          <b>${escapeHtml(it.producto || "Equipo")}</b>
+          <div class="inv-muted">
+            S/N: ${escapeHtml(it.serial || "-")} • Estado: ${escapeHtml(it.estado || "-")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function onTechChanged() {
+      techSession = { verified: false, tecnico: tecnicoInput.value.trim() };
+      invWrap.classList.add("hidden");
+      invList.innerHTML = "";
+      rutInput.value = "";
+
+      if (!techSession.tecnico) {
+        rutWrap.classList.add("hidden");
+        return;
+      }
+      rutWrap.classList.remove("hidden");
+    }
+
+    tecnicoInput.addEventListener("input", onTechChanged);
+    tecnicoInput.addEventListener("change", onTechChanged);
+
+    verifyTechBtn.addEventListener("click", async () => {
+      const tecnico = tecnicoInput.value.trim();
+      const rut = cleanRut(rutInput.value);
+
+      if (!tecnico) { alert("Escribe tu técnico (debe existir en la lista)."); return; }
+      if (!rut) { alert("Ingresa tu RUT."); return; }
+
+      verifyTechBtn.disabled = true;
+      verifyTechBtn.textContent = "Verificando…";
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "verifyTech",
+            tecnico,
+            rut
+          })
+        });
+
+        const text = await res.text();
+        let out;
+        try { out = JSON.parse(text); } catch { throw new Error("Respuesta no JSON."); }
+
+        if (!out.ok) {
+          invWrap.classList.add("hidden");
+          alert(out.error || "RUT inválido o no coincide con el técnico.");
+          return;
+        }
+
+        techSession = { verified: true, tecnico };
+        invWrap.classList.remove("hidden");
+        renderInventory(out.inventory);
+
+      } catch (e) {
+        console.error(e);
+        alert("No se pudo verificar. Revisa consola (F12).");
+      } finally {
+        verifyTechBtn.disabled = false;
+        verifyTechBtn.textContent = "✅ Confirmar técnico";
+      }
+    });
+  </script>
+</body>
+</html>
