@@ -1,49 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Recepción de Equipos</title>
   <style>
-    :root { --b:#e6e6e6; --t:#111; --mut:#666; }
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:16px;max-width:720px;color:var(--t)}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .pill{font-size:12px;border:1px solid var(--b);padding:6px 10px;border-radius:999px;color:var(--mut)}
-    .card{border:1px solid var(--b);border-radius:16px;padding:14px;margin-top:12px}
-    h1{font-size:20px;margin:0}
-    h2{font-size:16px;margin:0 0 8px 0}
-    label{display:block;margin-top:10px;font-weight:600}
-    input,select,textarea,button{
-      width:100%;padding:12px;font-size:16px;margin-top:6px;
-      border:1px solid var(--b);border-radius:12px;box-sizing:border-box;background:#fff;
+    :root{
+      --bg:#f8f9fa; --card-bg:#fff; --accent:#ff7b00; --accent-light:#e3f2fd;
+      --success:#28a745; --error:#dc3545; --text:#212529; --text-muted:#6c757d;
+      --border:#dee2e6; --shadow:0 2px 8px rgba(0,0,0,.1); --radius:12px; --transition:all .3s ease;
     }
-    textarea{min-height:90px;resize:vertical}
-    .row{display:flex;gap:10px}
-    .row > div{flex:1}
-    .nav{display:flex;gap:10px;margin-top:12px}
-    .nav button{cursor:pointer}
-    .secondary{background:#fafafa}
+    body{
+      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+      padding:16px; max-width:720px; margin:0 auto;
+      background:linear-gradient(135deg,var(--bg) 0%,#e9ecef 100%);
+      color:var(--text); line-height:1.5;
+    }
+    .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+    .pill{font-size:12px;border:1px solid var(--border);padding:6px 12px;border-radius:20px;color:var(--text-muted);background:var(--card-bg);box-shadow:var(--shadow)}
+    .card{border:none;border-radius:var(--radius);padding:20px;margin-top:12px;background:var(--card-bg);box-shadow:var(--shadow)}
+    h1{font-size:24px;margin:0;color:var(--accent);font-weight:600}
+    h2{font-size:18px;margin:0 0 12px 0;color:var(--text);font-weight:500}
+    label{display:block;margin-top:16px;font-weight:600;color:var(--text)}
+    input,select,textarea,button{
+      width:100%;padding:14px;font-size:16px;margin-top:8px;border:1px solid var(--border);
+      border-radius:var(--radius);box-sizing:border-box;background:var(--card-bg);transition:var(--transition);
+      min-height:48px
+    }
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+    textarea{min-height:100px;resize:vertical}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>div{flex:1;min-width:200px}
+    .nav{display:flex;gap:12px;margin-top:20px;justify-content:space-between}
+    .nav button{cursor:pointer;font-weight:600;border:none;border-radius:var(--radius);padding:14px 20px;transition:var(--transition);min-height:48px}
+    .nav button:not(.secondary){background:linear-gradient(135deg,var(--accent) 0%,#ff3300 100%);color:#fff}
+    .nav button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+    .nav button:disabled{opacity:.5;cursor:not-allowed}
     .hidden{display:none}
-    #video{width:100%;max-height:280px;border-radius:12px;background:#000;display:none;margin-top:10px}
-    .msg{margin-top:10px;font-size:14px;color:var(--mut)}
-    .ok{color:#0a7a2f}
-    .err{color:#b00020}
-    .req::after{content:" *"; color:#b00020; font-weight:700}
-    .small{font-size:12px;color:var(--mut);margin-top:6px}
-    .divider{height:1px;background:var(--b);margin:14px 0}
+    #video{width:100%;max-height:280px;border-radius:var(--radius);background:#000;display:none;margin-top:12px;box-shadow:var(--shadow)}
+    .msg{margin-top:12px;font-size:14px;padding:10px;border-radius:var(--radius);text-align:center}
+    .ok{color:var(--success);background:#d4edda;border:1px solid #c3e6cb}
+    .err{color:var(--error);background:#f8d7da;border:1px solid #f5c6cb}
+    .req::after{content:" *";color:var(--error);font-weight:700}
+    .small{font-size:12px;color:var(--text-muted);margin-top:8px}
+    .divider{height:1px;background:var(--border);margin:20px 0}
+    .progress{display:flex;justify-content:space-between;margin-bottom:20px}
+    .step{flex:1;height:4px;background:var(--border);border-radius:2px;margin:0 2px;transition:var(--transition)}
+    .step.active{background:var(--accent)}
+    .card>div{animation:fadeIn .5s ease-in-out}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   </style>
 </head>
 <body>
-
   <div class="top">
-    <h1>Recepción de Equipos</h1>
+    <h1>📦 Recepción de Equipos</h1>
     <span class="pill" id="statusPill">Cargando opciones…</span>
+  </div>
+
+  <div class="progress">
+    <div class="step active" id="progress1"></div>
+    <div class="step" id="progress2"></div>
+    <div class="step" id="progress3"></div>
   </div>
 
   <div class="card">
     <!-- STEP 1 -->
     <div id="step1">
-      <h2>Paso 1: Identificación</h2>
+      <h2>🔍 Paso 1: Identificación</h2>
 
       <label class="req" for="productos">Producto</label>
       <select id="productos"></select>
@@ -53,7 +76,7 @@
 
       <button id="scanBtn" type="button">📷 Escanear S/N</button>
       <video id="video" playsinline></video>
-      <div class="small">Tip: mejor luz = mejor lectura (Code128/Code39/QR).</div>
+      <div class="small">💡 Tip: Mejor luz = mejor lectura (Code128/Code39/QR).</div>
 
       <label for="usuario">Usuario</label>
       <input id="usuario" placeholder="Nombre usuario / contacto" autocomplete="off" />
@@ -69,7 +92,7 @@
 
     <!-- STEP 2 -->
     <div id="step2" class="hidden">
-      <h2>Paso 2: Accesorios y specs</h2>
+      <h2>⚙️ Paso 2: Accesorios y specs</h2>
 
       <div class="row">
         <div>
@@ -102,11 +125,11 @@
 
       <div class="row">
         <div>
-          <label for="generacion">Generacion</label>
+          <label for="generacion">Generación</label>
           <select id="generacion"></select>
         </div>
         <div>
-          <label for="subCategoria">Sub categoria</label>
+          <label for="subCategoria">Sub categoría</label>
           <select id="subCategoria"></select>
         </div>
       </div>
@@ -117,7 +140,7 @@
           <select id="watts"></select>
         </div>
         <div>
-          <label for="wattsCargador">WattsCargador</label>
+          <label for="wattsCargador">Watts Cargador</label>
           <select id="wattsCargador"></select>
         </div>
       </div>
@@ -130,21 +153,20 @@
 
     <!-- STEP 3 -->
     <div id="step3" class="hidden">
-      <h2>Paso 3: Falla y diagnóstico</h2>
+      <h2>🔧 Paso 3: Falla y diagnóstico</h2>
 
       <label for="falla">Falla</label>
       <select id="falla"></select>
 
-      <label for="diagnostico">Diagnostico</label>
+      <label for="diagnostico">Diagnóstico</label>
       <select id="diagnostico"></select>
 
       <div class="divider"></div>
 
-      <!-- ✅ Detalles separados (no mezclados con Falla/Diagnostico) -->
       <label for="detalleFalla">Detalle Falla (texto)</label>
       <textarea id="detalleFalla" placeholder="Detalle adicional de la falla..."></textarea>
 
-      <label for="detalleDiagnostico">Detalle Diagnostico (texto)</label>
+      <label for="detalleDiagnostico">Detalle Diagnóstico (texto)</label>
       <textarea id="detalleDiagnostico" placeholder="Detalle adicional del diagnóstico..."></textarea>
 
       <div class="nav">
@@ -158,7 +180,7 @@
 
   <script type="module">
     /************ CONFIG ************/
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzurOkbB7xrtmArErQes9SvGt6KZ-YhmhrXwUopQ4qHRVXl5kDaq3mO-DngZDQNWA0/exec ";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzurOkbB7xrtmArErQes9SvGt6KZ-YhmhrXwUopQ4qHRVXl5kDaq3mO-DngZDQNWA0/exec".trim();
 
     /************ UI ************/
     const statusPill = document.getElementById("statusPill");
@@ -166,8 +188,8 @@
 
     function setPill(text, kind="") {
       statusPill.textContent = text;
-      statusPill.style.borderColor = kind === "err" ? "#b00020" : "#e6e6e6";
-      statusPill.style.color = kind === "err" ? "#b00020" : "#666";
+      statusPill.style.borderColor = kind === "err" ? "#b00020" : "#dee2e6";
+      statusPill.style.color = kind === "err" ? "#b00020" : "#6c757d";
     }
     function setMsg(text, kind="") {
       msgEl.textContent = text;
@@ -179,6 +201,10 @@
       document.getElementById("step"+n).classList.remove("hidden");
       setMsg("");
       if (n !== 1) stopScan();
+
+      ["progress1","progress2","progress3"].forEach((id, i) => {
+        document.getElementById(id).classList.toggle("active", i < n);
+      });
     };
 
     // Fecha default ahora (local)
@@ -195,10 +221,10 @@
       { id: "cables",        key: "Cables" },
       { id: "cargador",      key: "Cargador" },
       { id: "falla",         key: "Falla" },
-      { id: "diagnostico",   key: "Diagnostico" },
+      { id: "diagnostico",   key: "Diagnostico" },   // (sin tilde) como tu hoja
       { id: "ram",           key: "Ram" },
       { id: "procesador",    key: "Procesador" },
-      { id: "generacion",    key: "Generacion" },
+      { id: "generacion",    key: "Generacion" },    // (sin tilde) como tu hoja
       { id: "subCategoria",  key: "Sub categoria" },
       { id: "watts",         key: "Watts" },
       { id: "wattsCargador", key: "WattsCargador" },
@@ -215,34 +241,28 @@
     }
 
     function fillSelect(el, arr) {
-      const current = el.value;
-      const options = (arr || []).filter(Boolean);
-      el.innerHTML =
-        `<option value="">Selecciona…</option>` +
-        options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
-      if (current) el.value = current;
+      const show = (arr || []).filter(v => v !== null && v !== undefined).map(v => String(v).trim()).filter(Boolean);
+      el.innerHTML = `<option value="">Selecciona…</option>` + show.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
     }
 
     async function loadOptions() {
-      try {
-        setPill("Cargando opciones…");
-        const res = await fetch(SCRIPT_URL, { method: "GET", cache: "no-store" });
-        const text = await res.text();
-        let data;
-        try { data = JSON.parse(text); }
-        catch { throw new Error("doGet no devolvió JSON. Respuesta: " + text.slice(0, 200)); }
+      setPill("Cargando opciones…");
+      const res = await fetch(SCRIPT_URL, { method: "GET", cache: "no-store" });
+      const text = await res.text();
 
-        for (const m of mapSelects) {
-          const el = document.getElementById(m.id);
-          if (!el) continue;
-          fillSelect(el, data[m.key] || []);
-        }
-        setPill("Opciones listas ✅");
-      } catch (e) {
-        console.error(e);
-        setPill("Error cargando opciones", "err");
-        alert("No cargó opciones. Revisa consola (F12) para ver el error.");
+      let data;
+      try { data = JSON.parse(text); }
+      catch {
+        console.error("Respuesta no JSON:", text);
+        throw new Error("doGet no devolvió JSON.");
       }
+
+      for (const m of mapSelects) {
+        const el = document.getElementById(m.id);
+        if (!el) continue;
+        fillSelect(el, data[m.key] || []);
+      }
+      setPill("Opciones listas ✅");
     }
 
     /************ Scanner (ZXing) ************/
@@ -273,8 +293,8 @@
     function stopScan() {
       if (!scanning) return;
       scanning = false;
+      try { codeReader.reset(); } catch {}
       videoEl.style.display = "none";
-      codeReader.reset();
       scanBtn.textContent = "📷 Escanear S/N";
     }
 
@@ -299,23 +319,12 @@
     window.save = async () => {
       setMsg("");
 
-      // Validaciones mínimas
-      if (!document.getElementById("productos").value) {
-        setMsg("Completa Producto antes de guardar.", "err");
-        goStep(1);
-        return;
-      }
-      if (!serialInput.value.trim()) {
-        setMsg("Completa o escanea el Serial Number (S/N).", "err");
-        goStep(1);
-        return;
-      }
+      const producto = document.getElementById("productos").value;
+      if (!producto) { setMsg("Completa Producto antes de guardar.", "err"); goStep(1); return; }
+      if (!serialInput.value.trim()) { setMsg("Completa o escanea el Serial Number (S/N).", "err"); goStep(1); return; }
 
       const payload = {
-        // compatibilidad (Code.gs acepta Producto o Productos)
-        "Producto": document.getElementById("productos").value,
-        "Productos": document.getElementById("productos").value,
-
+        "Producto": producto,
         "Serial Number": serialInput.value.trim(),
         "Usuario": document.getElementById("usuario").value.trim(),
         "Fecha Recibido": getFechaISO(),
@@ -324,7 +333,6 @@
         "Cargador": document.getElementById("cargador").value,
         "Cables": document.getElementById("cables").value,
 
-        // ✅ SOLO dropdowns (no mezclamos con texto)
         "Falla": document.getElementById("falla").value,
         "Diagnostico": document.getElementById("diagnostico").value,
 
@@ -336,7 +344,6 @@
         "Watts": document.getElementById("watts").value,
         "WattsCargador": document.getElementById("wattsCargador").value,
 
-        // ✅ detalles separados para columnas nuevas en Inv
         "Detalle Falla": document.getElementById("detalleFalla").value.trim(),
         "Detalle Diagnostico": document.getElementById("detalleDiagnostico").value.trim()
       };
@@ -355,16 +362,13 @@
         const text = await res.text();
         let out;
         try { out = JSON.parse(text); }
-        catch { throw new Error("doPost no devolvió JSON. Respuesta: " + text.slice(0, 200)); }
+        catch {
+          console.error("Respuesta no JSON:", text);
+          throw new Error("doPost no devolvió JSON.");
+        }
 
         if (out.ok) {
           setMsg("✅ Guardado. Puedes ingresar otro equipo.", "ok");
-
-          // opcional: limpiar detalles para siguiente ingreso
-          document.getElementById("detalleFalla").value = "";
-          document.getElementById("detalleDiagnostico").value = "";
-
-          await loadOptions();
         } else {
           setMsg("❌ Error al guardar: " + (out.error || "desconocido"), "err");
         }
@@ -373,7 +377,7 @@
         saveBtn.textContent = "✅ Guardar";
       } catch (e) {
         console.error(e);
-        setMsg("❌ No se pudo conectar/guardar. Revisa consola (F12).", "err");
+        setMsg("❌ No se pudo guardar. Revisa consola (F12).", "err");
         const saveBtn = document.getElementById("saveBtn");
         saveBtn.disabled = false;
         saveBtn.textContent = "✅ Guardar";
@@ -381,10 +385,12 @@
     };
 
     // INIT
-    if (!SCRIPT_URL) {
-      setPill("Falta SCRIPT_URL", "err");
-    } else {
+    try {
       await loadOptions();
+    } catch (e) {
+      console.error(e);
+      setPill("Error cargando opciones", "err");
+      alert("No cargó opciones. Abre consola (F12) y revisa el error.");
     }
   </script>
 </body>
