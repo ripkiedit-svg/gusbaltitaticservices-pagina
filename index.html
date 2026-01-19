@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recepción de Equipos</title>
+  <style>
+    :root { --b:#e6e6e6; --t:#111; --mut:#666; }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:16px;max-width:720px;color:var(--t)}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .pill{font-size:12px;border:1px solid var(--b);padding:6px 10px;border-radius:999px;color:var(--mut)}
+    .card{border:1px solid var(--b);border-radius:16px;padding:14px;margin-top:12px}
+    h1{font-size:20px;margin:0}
+    h2{font-size:16px;margin:0 0 8px 0}
+    label{display:block;margin-top:10px;font-weight:600}
+    input,select,textarea,button{
+      width:100%;padding:12px;font-size:16px;margin-top:6px;
+      border:1px solid var(--b);border-radius:12px;box-sizing:border-box;background:#fff;
+    }
+    textarea{min-height:90px;resize:vertical}
+    .row{display:flex;gap:10px}
+    .row > div{flex:1}
+    .nav{display:flex;gap:10px;margin-top:12px}
+    .nav button{cursor:pointer}
+    .secondary{background:#fafafa}
+    .hidden{display:none}
+    #video{width:100%;max-height:280px;border-radius:12px;background:#000;display:none;margin-top:10px}
+    .msg{margin-top:10px;font-size:14px;color:var(--mut)}
+    .ok{color:#0a7a2f}
+    .err{color:#b00020}
+    .req::after{content:" *"; color:#b00020; font-weight:700}
+    .small{font-size:12px;color:var(--mut);margin-top:6px}
+    .divider{height:1px;background:var(--b);margin:14px 0}
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <h1>Recepción de Equipos</h1>
+    <span class="pill" id="statusPill">Cargando opciones…</span>
+  </div>
+
+  <div class="card">
+    <!-- STEP 1 -->
+    <div id="step1">
+      <h2>Paso 1: Identificación</h2>
+
+      <label class="req" for="productos">Producto</label>
+      <select id="productos"></select>
+
+      <label class="req" for="serialNumber">Serial Number (S/N)</label>
+      <input id="serialNumber" placeholder="Escribe o escanea el S/N" autocomplete="off" />
+
+      <button id="scanBtn" type="button">📷 Escanear S/N</button>
+      <video id="video" playsinline></video>
+      <div class="small">Tip: mejor luz = mejor lectura (Code128/Code39/QR).</div>
+
+      <label for="usuario">Usuario</label>
+      <input id="usuario" placeholder="Nombre usuario / contacto" autocomplete="off" />
+
+      <label for="fechaRecibido">Fecha Recibido</label>
+      <input id="fechaRecibido" type="datetime-local" />
+
+      <div class="nav">
+        <button class="secondary" type="button" disabled>← Atrás</button>
+        <button type="button" onclick="goStep(2)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2" class="hidden">
+      <h2>Paso 2: Accesorios y specs</h2>
+
+      <div class="row">
+        <div>
+          <label for="cables">Cables</label>
+          <select id="cables"></select>
+        </div>
+        <div>
+          <label for="cargador">Cargador</label>
+          <select id="cargador"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="marca">Marca</label>
+          <select id="marca"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="ram">Ram</label>
+          <select id="ram"></select>
+        </div>
+        <div>
+          <label for="procesador">Procesador</label>
+          <select id="procesador"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="generacion">Generacion</label>
+          <select id="generacion"></select>
+        </div>
+        <div>
+          <label for="subCategoria">Sub categoria</label>
+          <select id="subCategoria"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="watts">Watts</label>
+          <select id="watts"></select>
+        </div>
+        <div>
+          <label for="wattsCargador">WattsCargador</label>
+          <select id="wattsCargador"></select>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="secondary" type="button" onclick="goStep(1)">← Atrás</button>
+        <button type="button" onclick="goStep(3)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="hidden">
+      <h2>Paso 3: Falla y diagnóstico</h2>
+
+      <label for="falla">Falla</label>
+      <select id="falla"></select>
+
+      <label for="diagnostico">Diagnostico</label>
+      <select id="diagnostico"></select>
+
+      <div class="divider"></div>
+
+      <!-- ✅ Detalles separados (no mezclados con Falla/Diagnostico) -->
+      <label for="detalleFalla">Detalle Falla (texto)</label>
+      <textarea id="detalleFalla" placeholder="Detalle adicional de la falla..."></textarea>
+
+      <label for="detalleDiagnostico">Detalle Diagnostico (texto)</label>
+      <textarea id="detalleDiagnostico" placeholder="Detalle adicional del diagnóstico..."></textarea>
+
+      <div class="nav">
+        <button class="secondary" type="button" onclick="goStep(2)">← Atrás</button>
+        <button id="saveBtn" type="button" onclick="save()">✅ Guardar</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    /************ CONFIG ************/
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzurOkbB7xrtmArErQes9SvGt6KZ-YhmhrXwUopQ4qHRVXl5kDaq3mO-DngZDQNWA0/exec ";
+
+    /************ UI ************/
+    const statusPill = document.getElementById("statusPill");
+    const msgEl = document.getElementById("msg");
+
+    function setPill(text, kind="") {
+      statusPill.textContent = text;
+      statusPill.style.borderColor = kind === "err" ? "#b00020" : "#e6e6e6";
+      statusPill.style.color = kind === "err" ? "#b00020" : "#666";
+    }
+    function setMsg(text, kind="") {
+      msgEl.textContent = text;
+      msgEl.className = "msg " + (kind === "ok" ? "ok" : kind === "err" ? "err" : "");
+    }
+
+    window.goStep = (n) => {
+      ["step1","step2","step3"].forEach(id => document.getElementById(id).classList.add("hidden"));
+      document.getElementById("step"+n).classList.remove("hidden");
+      setMsg("");
+      if (n !== 1) stopScan();
+    };
+
+    // Fecha default ahora (local)
+    (function setNow(){
+      const el = document.getElementById("fechaRecibido");
+      const d = new Date();
+      const pad = (x) => String(x).padStart(2, "0");
+      el.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    })();
+
+    /************ Dropdown mapping (Categorias) ************/
+    const mapSelects = [
+      { id: "productos",     key: "Productos" },
+      { id: "cables",        key: "Cables" },
+      { id: "cargador",      key: "Cargador" },
+      { id: "falla",         key: "Falla" },
+      { id: "diagnostico",   key: "Diagnostico" },
+      { id: "ram",           key: "Ram" },
+      { id: "procesador",    key: "Procesador" },
+      { id: "generacion",    key: "Generacion" },
+      { id: "subCategoria",  key: "Sub categoria" },
+      { id: "watts",         key: "Watts" },
+      { id: "wattsCargador", key: "WattsCargador" },
+      { id: "marca",         key: "Marca" }
+    ];
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function fillSelect(el, arr) {
+      const current = el.value;
+      const options = (arr || []).filter(Boolean);
+      el.innerHTML =
+        `<option value="">Selecciona…</option>` +
+        options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+      if (current) el.value = current;
+    }
+
+    async function loadOptions() {
+      try {
+        setPill("Cargando opciones…");
+        const res = await fetch(SCRIPT_URL, { method: "GET", cache: "no-store" });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); }
+        catch { throw new Error("doGet no devolvió JSON. Respuesta: " + text.slice(0, 200)); }
+
+        for (const m of mapSelects) {
+          const el = document.getElementById(m.id);
+          if (!el) continue;
+          fillSelect(el, data[m.key] || []);
+        }
+        setPill("Opciones listas ✅");
+      } catch (e) {
+        console.error(e);
+        setPill("Error cargando opciones", "err");
+        alert("No cargó opciones. Revisa consola (F12) para ver el error.");
+      }
+    }
+
+    /************ Scanner (ZXing) ************/
+    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm";
+
+    const codeReader = new BrowserMultiFormatReader();
+    const videoEl = document.getElementById("video");
+    const scanBtn = document.getElementById("scanBtn");
+    const serialInput = document.getElementById("serialNumber");
+    let scanning = false;
+
+    async function startScan() {
+      scanning = true;
+      videoEl.style.display = "block";
+      scanBtn.textContent = "⛔ Detener escaneo";
+
+      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+      const backCam = devices.find(d => /back|rear|environment/i.test(d.label))?.deviceId;
+
+      await codeReader.decodeFromVideoDevice(backCam || undefined, videoEl, (result) => {
+        if (result?.getText()) {
+          serialInput.value = result.getText();
+          stopScan();
+        }
+      });
+    }
+
+    function stopScan() {
+      if (!scanning) return;
+      scanning = false;
+      videoEl.style.display = "none";
+      codeReader.reset();
+      scanBtn.textContent = "📷 Escanear S/N";
+    }
+
+    scanBtn.addEventListener("click", async () => {
+      if (scanning) return stopScan();
+      try { await startScan(); }
+      catch (e) {
+        console.error(e);
+        stopScan();
+        alert("No se pudo abrir la cámara. Usa HTTPS y da permisos.");
+      }
+    });
+
+    /************ Save (POST) ************/
+    function getFechaISO() {
+      const v = document.getElementById("fechaRecibido").value;
+      if (!v) return new Date().toISOString();
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+
+    window.save = async () => {
+      setMsg("");
+
+      // Validaciones mínimas
+      if (!document.getElementById("productos").value) {
+        setMsg("Completa Producto antes de guardar.", "err");
+        goStep(1);
+        return;
+      }
+      if (!serialInput.value.trim()) {
+        setMsg("Completa o escanea el Serial Number (S/N).", "err");
+        goStep(1);
+        return;
+      }
+
+      const payload = {
+        // compatibilidad (Code.gs acepta Producto o Productos)
+        "Producto": document.getElementById("productos").value,
+        "Productos": document.getElementById("productos").value,
+
+        "Serial Number": serialInput.value.trim(),
+        "Usuario": document.getElementById("usuario").value.trim(),
+        "Fecha Recibido": getFechaISO(),
+
+        "Marca": document.getElementById("marca").value,
+        "Cargador": document.getElementById("cargador").value,
+        "Cables": document.getElementById("cables").value,
+
+        // ✅ SOLO dropdowns (no mezclamos con texto)
+        "Falla": document.getElementById("falla").value,
+        "Diagnostico": document.getElementById("diagnostico").value,
+
+        "Ram": document.getElementById("ram").value,
+        "Procesador": document.getElementById("procesador").value,
+        "Generacion": document.getElementById("generacion").value,
+        "Sub categoria": document.getElementById("subCategoria").value,
+
+        "Watts": document.getElementById("watts").value,
+        "WattsCargador": document.getElementById("wattsCargador").value,
+
+        // ✅ detalles separados para columnas nuevas en Inv
+        "Detalle Falla": document.getElementById("detalleFalla").value.trim(),
+        "Detalle Diagnostico": document.getElementById("detalleDiagnostico").value.trim()
+      };
+
+      try {
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Guardando…";
+
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        let out;
+        try { out = JSON.parse(text); }
+        catch { throw new Error("doPost no devolvió JSON. Respuesta: " + text.slice(0, 200)); }
+
+        if (out.ok) {
+          setMsg("✅ Guardado. Puedes ingresar otro equipo.", "ok");
+
+          // opcional: limpiar detalles para siguiente ingreso
+          document.getElementById("detalleFalla").value = "";
+          document.getElementById("detalleDiagnostico").value = "";
+
+          await loadOptions();
+        } else {
+          setMsg("❌ Error al guardar: " + (out.error || "desconocido"), "err");
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = "✅ Guardar";
+      } catch (e) {
+        console.error(e);
+        setMsg("❌ No se pudo conectar/guardar. Revisa consola (F12).", "err");
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.disabled = false;
+        saveBtn.textContent = "✅ Guardar";
+      }
+    };
+
+    // INIT
+    if (!SCRIPT_URL) {
+      setPill("Falta SCRIPT_URL", "err");
+    } else {
+      await loadOptions();
+    }
+  </script>
+</body>
+</html>
